@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>2026 MIP挑戰營計分系統</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="config.js"></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1 id="appTitle">2026 MIP挑戰營計分系統</h1>
+        <p id="statusText">尚未登入</p>
+      </div>
+      <div class="top-actions">
+        <button id="loginBtn" type="button">Google 登入</button>
+        <button id="refreshBtn" type="button" class="secondary">更新</button>
+      </div>
+    </header>
+
+    <nav class="tabs" aria-label="主要頁面">
+      <button class="tab active" type="button" data-view="scoreView">計分</button>
+      <button class="tab" type="button" data-view="boardView">投影榜</button>
+      <button class="tab" type="button" data-view="setupView">設定</button>
+    </nav>
+
+    <main>
+      <section id="scoreView" class="view active">
+        <form id="scoreForm" class="panel">
+          <div class="form-grid">
+            <label>
+              組別
+              <select id="teamSelect" required></select>
+            </label>
+            <label>
+              任務
+              <select id="missionSelect" required></select>
+            </label>
+            <label>
+              分數類型
+              <select id="scoreType">
+                <option value="EXP">EXP 經驗值</option>
+                <option value="EventCard">事件卡獎勵</option>
+                <option value="Spirit">精神加分</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="score-grid">
+            <label>任務完成度 <output id="completionOut">5</output><input id="completion" type="range" min="3" max="8" value="5"></label>
+            <label>勇氣 <output id="courageOut">3</output><input id="courage" type="range" min="0" max="5" value="3"></label>
+            <label>智慧 <output id="wisdomOut">3</output><input id="wisdom" type="range" min="0" max="5" value="3"></label>
+            <label>合作 <output id="cooperationOut">3</output><input id="cooperation" type="range" min="0" max="5" value="3"></label>
+            <label>創意 <output id="creativityOut">3</output><input id="creativity" type="range" min="0" max="5" value="3"></label>
+            <label>服務 <output id="serviceOut">3</output><input id="service" type="range" min="0" max="5" value="3"></label>
+          </div>
+
+          <div class="form-grid compact">
+            <label>
+              事件卡獎勵
+              <input id="eventBonus" type="number" min="0" max="50" step="1" value="0">
+            </label>
+            <label>
+              精神加分
+              <input id="spiritBonus" type="number" min="0" max="50" step="1" value="0">
+            </label>
+            <label>
+              本次合計
+              <input id="totalPreview" type="number" readonly value="20">
+            </label>
+          </div>
+
+          <label>
+            備註
+            <textarea id="note" rows="3" placeholder="可記錄學生表現、審核原因或任務狀態"></textarea>
+          </label>
+
+          <button id="submitBtn" type="submit" disabled>送出加分</button>
+        </form>
+      </section>
+
+      <section id="boardView" class="view">
+        <div class="projector">
+          <div class="projector-main">
+            <img src="assets/mission-map.png" alt="MIP 挑戰營貫穿任務地圖">
+            <div class="leaderboard">
+              <h2>即時排行榜</h2>
+              <ol id="leaderboardList"></ol>
+            </div>
+          </div>
+          <div id="guildStrip" class="guild-strip"></div>
+        </div>
+      </section>
+
+      <section id="setupView" class="view">
+        <div class="panel setup">
+          <h2>部署設定</h2>
+          <p>把產出的 xlsx 上傳到 Google Drive 並轉成 Google 試算表。建立 OAuth Client ID 後，複製 <code>config.example.js</code> 為 <code>config.js</code>，填入 <code>googleClientId</code> 與 <code>spreadsheetId</code>。</p>
+          <p>GitHub Pages 只需發布這個資料夾。老師透過 QR Code 或連結進入後，以 Google 登入；系統會檢查該帳號是否可編輯該試算表。</p>
+          <h2>工作表需求</h2>
+          <p>前端會讀取 <code>Teams</code>、<code>Missions</code>、<code>Leaderboard</code>，並把紀錄 append 到 <code>Scores</code>。</p>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

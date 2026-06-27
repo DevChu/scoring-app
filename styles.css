@@ -1,0 +1,274 @@
+:root {
+  color-scheme: light;
+  --ink: #1d2430;
+  --muted: #667085;
+  --line: #d7dde8;
+  --paper: #f7f5ee;
+  --panel: #ffffff;
+  --gold: #b88732;
+  --blue: #2f6fbb;
+  --red: #b7443e;
+  --green: #2e8f69;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px clamp(16px, 4vw, 40px);
+  background: #182131;
+  color: #fff;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: clamp(22px, 4vw, 34px);
+}
+
+#statusText {
+  margin-top: 4px;
+  color: #cbd5e1;
+}
+
+.top-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 16px;
+  background: var(--gold);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button.secondary,
+.tab {
+  background: #eef2f6;
+  color: var(--ink);
+}
+
+button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  padding: 12px clamp(16px, 4vw, 40px);
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+}
+
+.tab.active {
+  background: var(--blue);
+  color: #fff;
+}
+
+main {
+  padding: 20px clamp(16px, 4vw, 40px) 40px;
+}
+
+.view {
+  display: none;
+}
+
+.view.active {
+  display: block;
+}
+
+.panel {
+  width: min(980px, 100%);
+  margin: 0 auto;
+  padding: 20px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.form-grid.compact {
+  margin-top: 16px;
+}
+
+label {
+  display: grid;
+  gap: 7px;
+  font-weight: 700;
+}
+
+select,
+input,
+textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fff;
+  color: var(--ink);
+}
+
+textarea {
+  margin-top: 16px;
+  resize: vertical;
+}
+
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 18px;
+  margin-top: 18px;
+  padding: 16px;
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+output {
+  justify-self: end;
+  min-width: 2ch;
+  text-align: right;
+  color: var(--blue);
+}
+
+#submitBtn {
+  width: 100%;
+  margin-top: 18px;
+}
+
+.projector {
+  min-height: calc(100vh - 156px);
+}
+
+.projector-main {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 420px);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.projector img {
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+
+.leaderboard {
+  padding: 20px;
+  background: #111827;
+  color: #fff;
+  border-radius: 8px;
+}
+
+.leaderboard h2 {
+  font-size: clamp(26px, 4vw, 44px);
+  color: #f4cf77;
+}
+
+.leaderboard ol {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0 0;
+  padding-left: 34px;
+  font-size: clamp(20px, 3vw, 34px);
+  font-weight: 800;
+}
+
+.leaderboard li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,.16);
+}
+
+.guild-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.guild-card {
+  padding: 12px;
+  border-left: 6px solid var(--gold);
+  background: #fff;
+  border-radius: 8px;
+  border-top: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.guild-card strong {
+  display: block;
+}
+
+.guild-card span {
+  color: var(--muted);
+}
+
+.setup {
+  display: grid;
+  gap: 14px;
+  line-height: 1.65;
+}
+
+code {
+  padding: 2px 5px;
+  border-radius: 5px;
+  background: #eef2f6;
+}
+
+@media (max-width: 760px) {
+  .topbar,
+  .projector-main,
+  .form-grid,
+  .score-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    display: grid;
+  }
+
+  .projector img {
+    min-height: 260px;
+  }
+}
