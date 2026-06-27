@@ -1,6 +1,6 @@
 window.SCORING_CONFIG = {
-  googleClientId: "YOUR_GOOGLE_OAUTH_CLIENT_ID.apps.googleusercontent.com",
-  spreadsheetId: "YOUR_GOOGLE_SHEET_ID",
+  googleClientId: "571989823373-8jd1mupg52ieulumj35t5u1vu73c2bli.apps.googleusercontent.com",
+  spreadsheetId: "1pgNBbcZapwRVIDYrZeSaaGCs5mWpB-e9",
   appTitle: "2026 MIP挑戰營計分系統",
   refreshIntervalMs: 30000
 };
