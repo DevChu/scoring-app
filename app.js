@@ -15,6 +15,8 @@ let missions = [];
 let leaderboard = [];
 let scoreRows = [];
 let currentScoreMode = "EXP";
+const teamCount = 5;
+const guildOptions = ["", "守護公會", "偵察公會", "鍛造公會", "吟遊詩人公會", "魔法師公會"];
 
 const abilityDefs = [
   { key: "completion", label: "任務完成度", color: "#f3c76a" },
@@ -39,6 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $("refreshBtn").addEventListener("click", loadAll);
   $("fullscreenBtn").addEventListener("click", toggleProjectorFullscreen);
   $("scoreForm").addEventListener("submit", submitScore);
+  $("teamsForm").addEventListener("submit", saveTeams);
   document.addEventListener("fullscreenchange", () => {
     $("fullscreenBtn").textContent = document.fullscreenElement ? "退出全螢幕" : "全螢幕";
   });
@@ -125,11 +128,13 @@ async function verifyAccess() {
   const file = await api(`https://www.googleapis.com/drive/v3/files/${config.spreadsheetId}?fields=id,name,capabilities(canEdit)`);
   if (!file.capabilities?.canEdit) {
     $("submitBtn").disabled = true;
+    $("saveTeamsBtn").disabled = true;
     setStatus(`已登入，但此帳號沒有編輯「${file.name || "指定試算表"}」的權限`);
     return;
   }
   profile = await api("https://www.googleapis.com/oauth2/v3/userinfo");
   $("submitBtn").disabled = false;
+  $("saveTeamsBtn").disabled = false;
   setStatus(`已登入：${profile.email}，可編輯試算表`);
 }
 
@@ -141,7 +146,9 @@ async function loadAll() {
 
   teams = (data.valueRanges?.[0]?.values || [])
     .filter((row) => row[0] && String(row[3]).toUpperCase() !== "FALSE")
+    .slice(0, teamCount)
     .map((row) => ({ id: row[0], name: row[1], guild: row[2] || "", members: row[4] || "", note: row[5] || "" }));
+  const activeTeamIds = new Set(teams.map((team) => team.id));
 
   missions = (data.valueRanges?.[1]?.values || [])
     .filter((row) => row[0])
@@ -150,6 +157,7 @@ async function loadAll() {
   leaderboard = (data.valueRanges?.[2]?.values || [])
     .filter((row) => row[0])
     .map((row) => ({ rank: row[0], teamId: row[1], team: row[2], guild: row[3], total: Number(row[4] || 0), exp: Number(row[5] || 0), spirit: Number(row[6] || 0) }))
+    .filter((row) => activeTeamIds.has(row.teamId))
     .sort((a, b) => b.total - a.total);
 
   scoreRows = (data.valueRanges?.[3]?.values || []).map((row) => ({
@@ -163,13 +171,32 @@ async function loadAll() {
   })).filter((row) => row.teamId);
 
   renderOptions();
+  renderTeamsEditor();
   renderLeaderboard();
 }
 
 function renderOptions() {
   $("teamSelect").innerHTML = teams.map((team) => `<option value="${escapeHtml(team.id)}">${escapeHtml(team.name)} ${team.guild ? `(${escapeHtml(team.guild)})` : ""}</option>`).join("");
-  $("missionSelect").innerHTML = missions.map((mission) => `<option value="${escapeHtml(mission.id)}">${escapeHtml(mission.node)} ${escapeHtml(mission.name)}</option>`).join("");
+  $("missionSelect").innerHTML = missions
+    .filter((mission) => mission.id !== "SPIRIT_BONUS")
+    .map((mission) => `<option value="${escapeHtml(mission.id)}">${escapeHtml(mission.node)} ${escapeHtml(mission.name)}</option>`)
+    .join("");
   $("guildStrip").innerHTML = teams.map((team) => `<div class="guild-card"><strong>${escapeHtml(team.name)}</strong><span>${escapeHtml(team.guild || "未選公會")}</span></div>`).join("");
+}
+
+function renderTeamsEditor() {
+  $("teamsEditor").innerHTML = teams.map((team, index) => {
+    const guildSelect = guildOptions.map((guild) => (
+      `<option value="${escapeHtml(guild)}" ${guild === team.guild ? "selected" : ""}>${escapeHtml(guild || "尚未決定")}</option>`
+    )).join("");
+    return `<section class="team-editor-card" data-team-index="${index}">
+      <strong>${escapeHtml(team.id)}</strong>
+      <label>組別名稱<input name="teamName" value="${escapeHtml(team.name)}" required></label>
+      <label>職業公會<select name="guild">${guildSelect}</select></label>
+      <label>成員/備註<input name="members" value="${escapeHtml(team.members)}"></label>
+      <label>內部備註<input name="note" value="${escapeHtml(team.note)}"></label>
+    </section>`;
+  }).join("");
 }
 
 function renderLeaderboard() {
@@ -312,11 +339,11 @@ async function submitScore(event) {
   const scoreMode = getScoreMode();
   const mission = scoreMode === "EXP"
     ? missions.find((item) => item.id === $("missionSelect").value)
-    : { id: scoreMode === "EventCard" ? "EVENT_CARD" : "SPIRIT_BONUS" };
+    : { id: "SPIRIT_BONUS" };
   if (!team || !mission) return;
   const bonusPoints = Number($("bonusPoints").value || 0);
   if (scoreMode !== "EXP" && bonusPoints < 1) {
-    setStatus("事件卡獎勵與精神加分至少要 1 分才可以送出");
+    setStatus("精神加分至少要 1 分才可以送出");
     return;
   }
 
@@ -335,7 +362,7 @@ async function submitScore(event) {
     Number($("cooperation").value),
     Number($("creativity").value),
     Number($("service").value),
-    scoreMode === "EventCard" ? bonusPoints : 0,
+    0,
     scoreMode === "Spirit" ? bonusPoints : 0,
     Number($("totalPreview").value || 0),
     $("note").value.trim()
@@ -354,6 +381,36 @@ async function submitScore(event) {
     setStatus(`送出失敗：${error.message}`);
   } finally {
     $("submitBtn").disabled = false;
+  }
+}
+
+async function saveTeams(event) {
+  event.preventDefault();
+  const cards = Array.from(document.querySelectorAll(".team-editor-card"));
+  const values = cards.map((card, index) => {
+    const team = teams[index];
+    return [
+      team.id,
+      card.querySelector('[name="teamName"]').value.trim() || team.name,
+      card.querySelector('[name="guild"]').value,
+      "TRUE",
+      card.querySelector('[name="members"]').value.trim(),
+      card.querySelector('[name="note"]').value.trim()
+    ];
+  });
+
+  $("saveTeamsBtn").disabled = true;
+  try {
+    await api(`https://sheets.googleapis.com/v4/spreadsheets/${config.spreadsheetId}/values/Teams!A2:F${teamCount + 1}?valueInputOption=USER_ENTERED`, {
+      method: "PUT",
+      body: JSON.stringify({ values })
+    });
+    setStatus("組別設定已儲存");
+    await loadAll();
+  } catch (error) {
+    setStatus(`儲存組別失敗：${error.message}`);
+  } finally {
+    $("saveTeamsBtn").disabled = !accessToken;
   }
 }
 

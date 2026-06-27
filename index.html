@@ -24,6 +24,7 @@
     <nav class="tabs" aria-label="主要頁面">
       <button class="tab active" type="button" data-view="scoreView">計分</button>
       <button class="tab" type="button" data-view="boardView">投影榜</button>
+      <button class="tab" type="button" data-view="teamsView">組別</button>
       <button class="tab" type="button" data-view="setupView">設定</button>
     </nav>
 
@@ -46,10 +47,6 @@
             <label class="mode-option">
               <input type="radio" name="scoreMode" value="EXP" checked>
               <span>任務評分</span>
-            </label>
-            <label class="mode-option">
-              <input type="radio" name="scoreMode" value="EventCard">
-              <span>事件卡</span>
             </label>
             <label class="mode-option">
               <input type="radio" name="scoreMode" value="Spirit">
@@ -128,6 +125,19 @@
             </div>
             <button id="submitBtn" type="submit" disabled>送出加分</button>
           </div>
+        </form>
+      </section>
+
+      <section id="teamsView" class="view">
+        <form id="teamsForm" class="panel teams-panel">
+          <div class="section-head">
+            <div>
+              <h2>組別設定</h2>
+              <p>事件二後可在這裡更新組名與職業公會，會同步寫回 Google 試算表。</p>
+            </div>
+            <button id="saveTeamsBtn" type="submit" disabled>儲存組別</button>
+          </div>
+          <div id="teamsEditor" class="teams-editor"></div>
         </form>
       </section>
 
