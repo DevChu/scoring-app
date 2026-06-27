@@ -13,6 +13,7 @@ let profile = { name: "", email: "" };
 let teams = [];
 let missions = [];
 let leaderboard = [];
+let currentScoreMode = "EXP";
 
 const $ = (id) => document.getElementById(id);
 
@@ -85,6 +86,7 @@ function bindScoreControls() {
   });
   document.querySelectorAll('input[name="scoreMode"]').forEach((input) => {
     input.addEventListener("change", () => {
+      resetScoresForMode(getScoreMode());
       syncModeUI();
       updateTotal();
     });
@@ -156,6 +158,11 @@ async function submitScore(event) {
     ? missions.find((item) => item.id === $("missionSelect").value)
     : { id: scoreMode === "EventCard" ? "EVENT_CARD" : "SPIRIT_BONUS" };
   if (!team || !mission) return;
+  const bonusPoints = Number($("bonusPoints").value || 0);
+  if (scoreMode !== "EXP" && bonusPoints < 1) {
+    setStatus("事件卡獎勵與精神加分至少要 1 分才可以送出");
+    return;
+  }
 
   const row = [
     new Date().toISOString(),
@@ -166,14 +173,14 @@ async function submitScore(event) {
     team.name,
     mission.id,
     scoreMode,
-    Number($("completion").value),
+    scoreMode === "EXP" ? Number($("completion").value) : 0,
     Number($("courage").value),
     Number($("wisdom").value),
     Number($("cooperation").value),
     Number($("creativity").value),
     Number($("service").value),
-    scoreMode === "EventCard" ? Number($("bonusPoints").value || 0) : 0,
-    scoreMode === "Spirit" ? Number($("bonusPoints").value || 0) : 0,
+    scoreMode === "EventCard" ? bonusPoints : 0,
+    scoreMode === "Spirit" ? bonusPoints : 0,
     Number($("totalPreview").value || 0),
     $("note").value.trim()
   ];
@@ -195,7 +202,10 @@ async function submitScore(event) {
 }
 
 function updateTotal() {
-  const base = ["completion", "courage", "wisdom", "cooperation", "creativity", "service"]
+  const scoreIds = getScoreMode() === "EXP"
+    ? ["completion", "courage", "wisdom", "cooperation", "creativity", "service"]
+    : ["courage", "wisdom", "cooperation", "creativity", "service"];
+  const base = scoreIds
     .reduce((sum, id) => sum + Number($(id).value || 0), 0);
   const total = base + Number($("bonusPoints").value || 0);
   $("totalPreview").value = total;
@@ -210,6 +220,23 @@ function syncModeUI() {
   const isMissionScore = getScoreMode() === "EXP";
   $("missionField").hidden = !isMissionScore;
   $("missionSelect").required = isMissionScore;
+  $("completionStepper").hidden = !isMissionScore;
+}
+
+function resetScoresForMode(scoreMode) {
+  if (scoreMode === currentScoreMode) return;
+  currentScoreMode = scoreMode;
+  if (scoreMode === "EXP") {
+    setScoreValue("completion", 5);
+    ["courage", "wisdom", "cooperation", "creativity", "service"].forEach((id) => setScoreValue(id, 3));
+  } else {
+    ["courage", "wisdom", "cooperation", "creativity", "service", "bonusPoints"].forEach((id) => setScoreValue(id, 0));
+  }
+}
+
+function setScoreValue(id, value) {
+  $(id).value = String(value);
+  $(`${id}Out`).value = String(value);
 }
 
 async function api(url, options = {}) {
