@@ -13,7 +13,21 @@ let profile = { name: "", email: "" };
 let teams = [];
 let missions = [];
 let leaderboard = [];
+let scoreRows = [];
 let currentScoreMode = "EXP";
+
+const abilityDefs = [
+  { key: "completion", label: "任務完成度", color: "#f3c76a" },
+  { key: "courage", label: "勇氣", color: "#d8554a" },
+  { key: "wisdom", label: "智慧", color: "#3a8a55" },
+  { key: "service", label: "服務", color: "#3f87c9" },
+  { key: "creativity", label: "創意", color: "#a2419a" },
+  { key: "cooperation", label: "合作", color: "#7bb84a" }
+];
+const teamLineColors = [
+  "#f3c76a", "#d8554a", "#3f87c9", "#7bb84a", "#a2419a", "#2e8f69",
+  "#d98d35", "#8d6ac8", "#4fb6c4", "#c45f8a", "#6b73d6", "#8a6a3a"
+];
 
 const $ = (id) => document.getElementById(id);
 
@@ -23,7 +37,11 @@ document.addEventListener("DOMContentLoaded", () => {
   bindScoreControls();
   $("loginBtn").addEventListener("click", login);
   $("refreshBtn").addEventListener("click", loadAll);
+  $("fullscreenBtn").addEventListener("click", toggleProjectorFullscreen);
   $("scoreForm").addEventListener("submit", submitScore);
+  document.addEventListener("fullscreenchange", () => {
+    $("fullscreenBtn").textContent = document.fullscreenElement ? "退出全螢幕" : "全螢幕";
+  });
 
   if (!config.googleClientId || !config.spreadsheetId) {
     setStatus("請先建立 config.js 並填入 Google OAuth Client ID 與 Spreadsheet ID");
@@ -117,7 +135,7 @@ async function verifyAccess() {
 
 async function loadAll() {
   if (!accessToken) return;
-  const ranges = ["Teams!A2:F", "Missions!A2:F", "Leaderboard!A2:G"];
+  const ranges = ["Teams!A2:F", "Missions!A2:F", "Leaderboard!A2:G", "Scores!A2:R"];
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${config.spreadsheetId}/values:batchGet?ranges=${ranges.map(encodeURIComponent).join("&ranges=")}`;
   const data = await api(url);
 
@@ -134,6 +152,16 @@ async function loadAll() {
     .map((row) => ({ rank: row[0], teamId: row[1], team: row[2], guild: row[3], total: Number(row[4] || 0), exp: Number(row[5] || 0), spirit: Number(row[6] || 0) }))
     .sort((a, b) => b.total - a.total);
 
+  scoreRows = (data.valueRanges?.[3]?.values || []).map((row) => ({
+    teamId: row[4] || "",
+    completion: Number(row[8] || 0),
+    courage: Number(row[9] || 0),
+    wisdom: Number(row[10] || 0),
+    cooperation: Number(row[11] || 0),
+    creativity: Number(row[12] || 0),
+    service: Number(row[13] || 0)
+  })).filter((row) => row.teamId);
+
   renderOptions();
   renderLeaderboard();
 }
@@ -145,9 +173,137 @@ function renderOptions() {
 }
 
 function renderLeaderboard() {
-  $("leaderboardList").innerHTML = leaderboard.slice(0, 10).map((item) => (
-    `<li>${escapeHtml(item.team)} <span>${item.total}</span></li>`
+  $("leaderboardList").innerHTML = leaderboard.slice(0, 10).map((item, index) => (
+    `<li><em>${index + 1}</em><span>${escapeHtml(item.team)}</span><strong>${item.total}</strong></li>`
   )).join("");
+  renderAbilityCharts();
+}
+
+function renderAbilityCharts() {
+  const stats = buildTeamStats();
+  renderBarChart(stats);
+  renderRadarChart(stats);
+}
+
+function buildTeamStats() {
+  const byTeam = new Map(teams.map((team) => [team.id, {
+    id: team.id,
+    name: team.name,
+    guild: team.guild,
+    completion: 0,
+    courage: 0,
+    wisdom: 0,
+    cooperation: 0,
+    creativity: 0,
+    service: 0
+  }]));
+
+  scoreRows.forEach((row) => {
+    const stat = byTeam.get(row.teamId);
+    if (!stat) return;
+    abilityDefs.forEach((ability) => {
+      stat[ability.key] += row[ability.key] || 0;
+    });
+  });
+
+  return teams.map((team) => byTeam.get(team.id)).filter(Boolean);
+}
+
+function renderBarChart(stats) {
+  const chart = $("barChart");
+  if (!stats.length) {
+    chart.innerHTML = `<p class="empty-chart">尚無計分資料</p>`;
+    return;
+  }
+
+  const maxValue = Math.max(10, ...stats.flatMap((team) => abilityDefs.map((ability) => team[ability.key])));
+  const rows = stats.map((team) => {
+    const bars = abilityDefs.map((ability) => {
+      const value = team[ability.key];
+      const height = Math.round((value / maxValue) * 100);
+      return `<div class="ability-bar" title="${escapeHtml(ability.label)} ${value}">
+        <span style="height:${height}%; min-height:${value > 0 ? 3 : 0}px; background:${ability.color}"></span>
+        <b style="bottom:calc(${height}% + 4px)">${value}</b>
+      </div>`;
+    }).join("");
+    return `<div class="bar-team">
+      <div class="bar-cluster">${bars}</div>
+      <strong>${escapeHtml(team.name)}</strong>
+    </div>`;
+  }).join("");
+
+  const legend = abilityDefs.map((ability) => (
+    `<span><i style="background:${ability.color}"></i>${escapeHtml(ability.label)}</span>`
+  )).join("");
+
+  chart.innerHTML = `<div class="bar-stage">${rows}</div><div class="chart-legend">${legend}</div>`;
+}
+
+function renderRadarChart(stats) {
+  const chart = $("radarChart");
+  const displayTeams = stats.filter((team) => abilityDefs.some((ability) => team[ability.key] > 0));
+  if (!displayTeams.length) {
+    chart.innerHTML = `<p class="empty-chart">尚無能力分數</p>`;
+    return;
+  }
+
+  const size = 520;
+  const center = size / 2;
+  const radius = 170;
+  const maxValue = Math.max(10, ...displayTeams.flatMap((team) => abilityDefs.map((ability) => team[ability.key])));
+  const angles = abilityDefs.map((_, index) => -Math.PI / 2 + (Math.PI * 2 * index / abilityDefs.length));
+  const rings = [0.25, 0.5, 0.75, 1].map((ratio) => polygonPoints(angles.map((angle) => point(center, radius * ratio, angle))));
+  const axes = angles.map((angle, index) => {
+    const end = point(center, radius, angle);
+    const label = point(center, radius + 34, angle);
+    return `<line x1="${center}" y1="${center}" x2="${end.x}" y2="${end.y}" />
+      <text x="${label.x}" y="${label.y}" text-anchor="middle">${escapeHtml(abilityDefs[index].label)}</text>`;
+  }).join("");
+
+  const polygons = displayTeams.map((team, index) => {
+    const color = teamLineColors[index % teamLineColors.length];
+    const points = polygonPoints(angles.map((angle, abilityIndex) => {
+      const ability = abilityDefs[abilityIndex];
+      return point(center, radius * ((team[ability.key] || 0) / maxValue), angle);
+    }));
+    return `<polygon points="${points}" fill="${color}" fill-opacity=".12" stroke="${color}" stroke-width="5" />
+      <circle cx="${center}" cy="${center}" r="3" fill="${color}" />`;
+  }).join("");
+
+  const legend = displayTeams.map((team, index) => (
+    `<span><i style="background:${teamLineColors[index % teamLineColors.length]}"></i>${escapeHtml(team.name)}</span>`
+  )).join("");
+
+  chart.innerHTML = `<svg viewBox="0 0 ${size} ${size}" role="img" aria-label="各組能力雷達圖">
+      <g class="radar-grid">
+        ${rings.map((points) => `<polygon points="${points}" />`).join("")}
+        ${axes}
+      </g>
+      <g class="radar-series">${polygons}</g>
+    </svg>
+    <div class="chart-legend">${legend}</div>`;
+}
+
+function point(center, distance, angle) {
+  return {
+    x: Math.round((center + Math.cos(angle) * distance) * 10) / 10,
+    y: Math.round((center + Math.sin(angle) * distance) * 10) / 10
+  };
+}
+
+function polygonPoints(points) {
+  return points.map((item) => `${item.x},${item.y}`).join(" ");
+}
+
+async function toggleProjectorFullscreen() {
+  const projector = $("projector");
+  if (!document.fullscreenElement) {
+    await projector.requestFullscreen();
+    $("fullscreenBtn").textContent = "退出全螢幕";
+  } else {
+    await document.exitFullscreen();
+    $("fullscreenBtn").textContent = "全螢幕";
+  }
 }
 
 async function submitScore(event) {

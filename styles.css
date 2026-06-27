@@ -299,49 +299,230 @@ textarea {
 
 .projector {
   min-height: calc(100vh - 156px);
+  padding: 20px;
+  overflow: auto;
+  border-radius: 8px;
+  background:
+    linear-gradient(rgba(14, 22, 35, .82), rgba(14, 22, 35, .82)),
+    url("assets/mission-map.png") center / cover;
+  color: #fff;
 }
 
-.projector-main {
-  position: relative;
+.projector:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  padding: 30px;
+  border-radius: 0;
+}
+
+.projector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.projector-header p {
+  color: #f3c76a;
+  font-weight: 800;
+}
+
+.projector-header h2 {
+  color: #fff4cc;
+  font-size: 44px;
+  line-height: 1.1;
+}
+
+.projector-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 420px);
+  grid-template-columns: minmax(280px, .7fr) minmax(420px, 1.25fr) minmax(360px, 1fr);
   gap: 18px;
   align-items: stretch;
 }
 
-.projector img {
-  width: 100%;
-  height: 100%;
-  min-height: 420px;
-  object-fit: cover;
+.score-rank,
+.chart-panel {
+  min-height: 520px;
+  padding: 18px;
+  border: 1px solid rgba(243, 199, 106, .55);
   border-radius: 8px;
-  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(255, 250, 229, .94), rgba(238, 222, 185, .9));
+  box-shadow: inset 0 0 0 2px rgba(112, 71, 30, .22), 0 18px 40px rgba(0, 0, 0, .28);
+  color: #2a2118;
 }
 
-.leaderboard {
-  padding: 20px;
-  background: #111827;
-  color: #fff;
-  border-radius: 8px;
-}
-
-.leaderboard h2 {
-  font-size: 40px;
-  color: #f4cf77;
-}
-
-.leaderboard ol {
-  display: grid;
-  gap: 10px;
-  margin: 18px 0 0;
-  padding-left: 34px;
+.score-rank h3,
+.chart-panel h3 {
+  margin: 0;
+  color: #5d351d;
   font-size: 30px;
+  text-align: center;
+}
+
+.score-rank ol {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.score-rank li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid rgba(122, 84, 37, .24);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .55);
+  font-size: 26px;
+  font-weight: 900;
+}
+
+.score-rank li em {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #5d351d;
+  color: #f8e8ad;
+  font-size: 18px;
+  font-style: normal;
+}
+
+.score-rank li strong {
+  color: #b7443e;
+  font-size: 34px;
+}
+
+.bar-chart,
+.radar-chart {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 12px;
+  height: calc(100% - 48px);
+  margin-top: 14px;
+}
+
+.bar-stage {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(86px, 1fr));
+  gap: 12px;
+  align-items: end;
+  min-height: 360px;
+  padding: 14px 10px 4px;
+  border-bottom: 2px solid rgba(93, 53, 29, .28);
+}
+
+.bar-team {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  text-align: center;
+}
+
+.bar-cluster {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(7px, 1fr));
+  gap: 4px;
+  align-items: end;
+  height: 320px;
+}
+
+.ability-bar {
+  position: relative;
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  min-width: 0;
+  height: 100%;
+}
+
+.ability-bar span {
+  width: 100%;
+  border-radius: 5px 5px 0 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .35);
+}
+
+.ability-bar b {
+  position: absolute;
+  font-size: 16px;
+  color: #2a2118;
+}
+
+.bar-team strong {
+  overflow: hidden;
+  color: #5d351d;
+  font-size: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 14px;
+  color: #4a3828;
+  font-size: 16px;
   font-weight: 800;
 }
 
-.leaderboard li {
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(255,255,255,.16);
+.chart-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chart-legend i {
+  display: inline-block;
+  width: 18px;
+  height: 8px;
+  border-radius: 99px;
+}
+
+.radar-chart svg {
+  width: 100%;
+  height: min(52vh, 430px);
+}
+
+.radar-grid polygon {
+  fill: rgba(255, 255, 255, .28);
+  stroke: rgba(93, 53, 29, .24);
+  stroke-width: 2;
+}
+
+.radar-grid line {
+  stroke: rgba(93, 53, 29, .2);
+  stroke-width: 2;
+}
+
+.radar-grid text {
+  fill: #5d351d;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.empty-chart {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: #74583b;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.projector-guilds {
+  margin-top: 18px;
+}
+
+.projector-guilds .guild-card {
+  background: rgba(255, 250, 229, .92);
+  border-color: rgba(243, 199, 106, .6);
 }
 
 .guild-strip {
@@ -383,7 +564,6 @@ code {
 
 @media (max-width: 760px) {
   .topbar,
-  .projector-main,
   .form-grid,
   .score-grid,
   .mode-picker,
@@ -422,5 +602,13 @@ code {
 
   .projector img {
     min-height: 260px;
+  }
+
+  .projector-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .projector-header {
+    display: grid;
   }
 }

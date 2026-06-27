@@ -132,15 +132,29 @@
       </section>
 
       <section id="boardView" class="view">
-        <div class="projector">
-          <div class="projector-main">
-            <img src="assets/mission-map.png" alt="MIP 挑戰營貫穿任務地圖">
-            <div class="leaderboard">
-              <h2>即時排行榜</h2>
-              <ol id="leaderboardList"></ol>
+        <div id="projector" class="projector">
+          <div class="projector-header">
+            <div>
+              <p>2026 MIP挑戰營</p>
+              <h2>勇者公會戰績</h2>
             </div>
+            <button id="fullscreenBtn" type="button" class="secondary">全螢幕</button>
           </div>
-          <div id="guildStrip" class="guild-strip"></div>
+          <div class="projector-grid">
+            <section class="score-rank">
+              <h3>即時排行榜</h3>
+              <ol id="leaderboardList"></ol>
+            </section>
+            <section class="chart-panel">
+              <h3>各組能力分數</h3>
+              <div id="barChart" class="bar-chart"></div>
+            </section>
+            <section class="chart-panel radar-panel">
+              <h3>能力雷達</h3>
+              <div id="radarChart" class="radar-chart"></div>
+            </section>
+          </div>
+          <div id="guildStrip" class="guild-strip projector-guilds"></div>
         </div>
       </section>
 
