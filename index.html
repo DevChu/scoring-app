@@ -35,38 +35,81 @@
               組別
               <select id="teamSelect" required></select>
             </label>
-            <label>
+            <label id="missionField">
               任務
               <select id="missionSelect" required></select>
             </label>
-            <label>
-              分數類型
-              <select id="scoreType">
-                <option value="EXP">EXP 經驗值</option>
-                <option value="EventCard">事件卡獎勵</option>
-                <option value="Spirit">精神加分</option>
-              </select>
-            </label>
           </div>
+
+          <fieldset class="mode-picker">
+            <legend>計分模式</legend>
+            <label class="mode-option">
+              <input type="radio" name="scoreMode" value="EXP" checked>
+              <span>任務評分</span>
+            </label>
+            <label class="mode-option">
+              <input type="radio" name="scoreMode" value="EventCard">
+              <span>事件卡</span>
+            </label>
+            <label class="mode-option">
+              <input type="radio" name="scoreMode" value="Spirit">
+              <span>精神表現</span>
+            </label>
+          </fieldset>
 
           <div class="score-grid">
-            <label>任務完成度 <output id="completionOut">5</output><input id="completion" type="range" min="3" max="8" value="5"></label>
-            <label>勇氣 <output id="courageOut">3</output><input id="courage" type="range" min="0" max="5" value="3"></label>
-            <label>智慧 <output id="wisdomOut">3</output><input id="wisdom" type="range" min="0" max="5" value="3"></label>
-            <label>合作 <output id="cooperationOut">3</output><input id="cooperation" type="range" min="0" max="5" value="3"></label>
-            <label>創意 <output id="creativityOut">3</output><input id="creativity" type="range" min="0" max="5" value="3"></label>
-            <label>服務 <output id="serviceOut">3</output><input id="service" type="range" min="0" max="5" value="3"></label>
+            <div class="stepper" data-for="completion">
+              <span>任務完成度</span>
+              <button type="button" data-step="-1" aria-label="任務完成度減一">-</button>
+              <output id="completionOut">5</output>
+              <button type="button" data-step="1" aria-label="任務完成度加一">+</button>
+              <input id="completion" type="hidden" min="3" max="8" value="5">
+            </div>
+            <div class="stepper" data-for="courage">
+              <span>勇氣</span>
+              <button type="button" data-step="-1" aria-label="勇氣減一">-</button>
+              <output id="courageOut">3</output>
+              <button type="button" data-step="1" aria-label="勇氣加一">+</button>
+              <input id="courage" type="hidden" min="0" max="5" value="3">
+            </div>
+            <div class="stepper" data-for="wisdom">
+              <span>智慧</span>
+              <button type="button" data-step="-1" aria-label="智慧減一">-</button>
+              <output id="wisdomOut">3</output>
+              <button type="button" data-step="1" aria-label="智慧加一">+</button>
+              <input id="wisdom" type="hidden" min="0" max="5" value="3">
+            </div>
+            <div class="stepper" data-for="cooperation">
+              <span>合作</span>
+              <button type="button" data-step="-1" aria-label="合作減一">-</button>
+              <output id="cooperationOut">3</output>
+              <button type="button" data-step="1" aria-label="合作加一">+</button>
+              <input id="cooperation" type="hidden" min="0" max="5" value="3">
+            </div>
+            <div class="stepper" data-for="creativity">
+              <span>創意</span>
+              <button type="button" data-step="-1" aria-label="創意減一">-</button>
+              <output id="creativityOut">3</output>
+              <button type="button" data-step="1" aria-label="創意加一">+</button>
+              <input id="creativity" type="hidden" min="0" max="5" value="3">
+            </div>
+            <div class="stepper" data-for="service">
+              <span>服務</span>
+              <button type="button" data-step="-1" aria-label="服務減一">-</button>
+              <output id="serviceOut">3</output>
+              <button type="button" data-step="1" aria-label="服務加一">+</button>
+              <input id="service" type="hidden" min="0" max="5" value="3">
+            </div>
           </div>
 
-          <div class="form-grid compact">
-            <label>
-              事件卡獎勵
-              <input id="eventBonus" type="number" min="0" max="50" step="1" value="0">
-            </label>
-            <label>
-              精神加分
-              <input id="spiritBonus" type="number" min="0" max="50" step="1" value="0">
-            </label>
+          <div class="score-extra">
+            <div class="stepper bonus-stepper" data-for="bonusPoints">
+              <span>獎勵分數</span>
+              <button type="button" data-step="-1" aria-label="獎勵分數減一">-</button>
+              <output id="bonusPointsOut">0</output>
+              <button type="button" data-step="1" aria-label="獎勵分數加一">+</button>
+              <input id="bonusPoints" type="hidden" min="0" max="50" value="0">
+            </div>
             <label>
               本次合計
               <input id="totalPreview" type="number" readonly value="20">
@@ -78,7 +121,13 @@
             <textarea id="note" rows="3" placeholder="可記錄學生表現、審核原因或任務狀態"></textarea>
           </label>
 
-          <button id="submitBtn" type="submit" disabled>送出加分</button>
+          <div class="submit-bar">
+            <div>
+              <span>本次合計</span>
+              <strong id="stickyTotal">20</strong>
+            </div>
+            <button id="submitBtn" type="submit" disabled>送出加分</button>
+          </div>
         </form>
       </section>
 
@@ -98,7 +147,7 @@
       <section id="setupView" class="view">
         <div class="panel setup">
           <h2>部署設定</h2>
-          <p>把產出的 xlsx 上傳到 Google Drive 並轉成 Google 試算表。建立 OAuth Client ID 後，複製 <code>config.example.js</code> 為 <code>config.js</code>，填入 <code>googleClientId</code> 與 <code>spreadsheetId</code>。</p>
+          <p>把產出的 xlsx 上傳到 Google Drive 並轉成 Google 試算表。建立 OAuth Client ID 後，修改 <code>config.js</code>，填入 <code>googleClientId</code> 與 <code>spreadsheetId</code>。</p>
           <p>GitHub Pages 只需發布這個資料夾。老師透過 QR Code 或連結進入後，以 Google 登入；系統會檢查該帳號是否可編輯該試算表。</p>
           <h2>工作表需求</h2>
           <p>前端會讀取 <code>Teams</code>、<code>Missions</code>、<code>Leaderboard</code>，並把紀錄 append 到 <code>Scores</code>。</p>

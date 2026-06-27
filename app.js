@@ -67,12 +67,29 @@ function bindScoreControls() {
   ["completion", "courage", "wisdom", "cooperation", "creativity", "service"].forEach((id) => {
     const input = $(id);
     const out = $(`${id}Out`);
-    input.addEventListener("input", () => {
-      out.value = input.value;
+    out.value = input.value;
+  });
+  $("bonusPointsOut").value = $("bonusPoints").value;
+  document.querySelectorAll(".stepper button").forEach((button) => {
+    button.addEventListener("click", () => {
+      const stepper = button.closest(".stepper");
+      const input = $(stepper.dataset.for);
+      const out = $(`${stepper.dataset.for}Out`);
+      const min = Number(input.min || 0);
+      const max = Number(input.max || 99);
+      const next = Math.max(min, Math.min(max, Number(input.value || 0) + Number(button.dataset.step || 0)));
+      input.value = String(next);
+      out.value = String(next);
       updateTotal();
     });
   });
-  ["eventBonus", "spiritBonus", "scoreType"].forEach((id) => $(id).addEventListener("input", updateTotal));
+  document.querySelectorAll('input[name="scoreMode"]').forEach((input) => {
+    input.addEventListener("change", () => {
+      syncModeUI();
+      updateTotal();
+    });
+  });
+  syncModeUI();
   updateTotal();
 }
 
@@ -134,7 +151,10 @@ function renderLeaderboard() {
 async function submitScore(event) {
   event.preventDefault();
   const team = teams.find((item) => item.id === $("teamSelect").value);
-  const mission = missions.find((item) => item.id === $("missionSelect").value);
+  const scoreMode = getScoreMode();
+  const mission = scoreMode === "EXP"
+    ? missions.find((item) => item.id === $("missionSelect").value)
+    : { id: scoreMode === "EventCard" ? "EVENT_CARD" : "SPIRIT_BONUS" };
   if (!team || !mission) return;
 
   const row = [
@@ -145,15 +165,15 @@ async function submitScore(event) {
     team.id,
     team.name,
     mission.id,
-    $("scoreType").value,
+    scoreMode,
     Number($("completion").value),
     Number($("courage").value),
     Number($("wisdom").value),
     Number($("cooperation").value),
     Number($("creativity").value),
     Number($("service").value),
-    Number($("eventBonus").value || 0),
-    Number($("spiritBonus").value || 0),
+    scoreMode === "EventCard" ? Number($("bonusPoints").value || 0) : 0,
+    scoreMode === "Spirit" ? Number($("bonusPoints").value || 0) : 0,
     Number($("totalPreview").value || 0),
     $("note").value.trim()
   ];
@@ -177,7 +197,19 @@ async function submitScore(event) {
 function updateTotal() {
   const base = ["completion", "courage", "wisdom", "cooperation", "creativity", "service"]
     .reduce((sum, id) => sum + Number($(id).value || 0), 0);
-  $("totalPreview").value = base + Number($("eventBonus").value || 0) + Number($("spiritBonus").value || 0);
+  const total = base + Number($("bonusPoints").value || 0);
+  $("totalPreview").value = total;
+  $("stickyTotal").textContent = total;
+}
+
+function getScoreMode() {
+  return document.querySelector('input[name="scoreMode"]:checked')?.value || "EXP";
+}
+
+function syncModeUI() {
+  const isMissionScore = getScoreMode() === "EXP";
+  $("missionField").hidden = !isMissionScore;
+  $("missionSelect").required = isMissionScore;
 }
 
 async function api(url, options = {}) {

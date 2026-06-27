@@ -15,11 +15,16 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   background: var(--paper);
   color: var(--ink);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  padding-bottom: 94px;
 }
 
 button,
@@ -46,7 +51,8 @@ p {
 }
 
 h1 {
-  font-size: clamp(22px, 4vw, 34px);
+  font-size: 30px;
+  line-height: 1.18;
 }
 
 #statusText {
@@ -62,7 +68,7 @@ h1 {
 }
 
 button {
-  min-height: 44px;
+  min-height: 48px;
   border: 0;
   border-radius: 8px;
   padding: 0 16px;
@@ -97,7 +103,7 @@ button:disabled {
 }
 
 main {
-  padding: 20px clamp(16px, 4vw, 40px) 40px;
+  padding: 20px clamp(16px, 4vw, 40px) 10px;
 }
 
 .view {
@@ -111,7 +117,7 @@ main {
 .panel {
   width: min(980px, 100%);
   margin: 0 auto;
-  padding: 20px;
+  padding: 18px;
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -139,14 +145,58 @@ textarea {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 10px 12px;
+  min-height: 52px;
+  padding: 12px 14px;
   background: #fff;
   color: var(--ink);
 }
 
 textarea {
   margin-top: 16px;
+  min-height: 88px;
   resize: vertical;
+}
+
+.mode-picker {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 18px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.mode-picker legend {
+  grid-column: 1 / -1;
+  margin-bottom: 8px;
+  font-weight: 800;
+}
+
+.mode-option {
+  display: block;
+}
+
+.mode-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mode-option span {
+  display: grid;
+  min-height: 58px;
+  place-items: center;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.mode-option input:checked + span {
+  border-color: var(--blue);
+  background: #e8f1ff;
+  color: #174f91;
 }
 
 .score-grid {
@@ -160,16 +210,91 @@ textarea {
   border-radius: 8px;
 }
 
-output {
-  justify-self: end;
-  min-width: 2ch;
-  text-align: right;
-  color: var(--blue);
+.stepper {
+  display: grid;
+  grid-template-columns: 1fr 56px 54px 56px;
+  align-items: center;
+  gap: 8px;
+  min-height: 70px;
+  padding: 10px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
 }
 
-#submitBtn {
+.stepper span {
+  font-weight: 800;
+}
+
+.stepper button {
+  min-width: 56px;
+  min-height: 52px;
+  padding: 0;
+  background: #e9eef6;
+  color: var(--ink);
+  font-size: 28px;
+  line-height: 1;
+}
+
+.stepper button:last-of-type {
+  background: var(--blue);
+  color: #fff;
+}
+
+.stepper output {
+  display: grid;
+  place-items: center;
+  min-width: 54px;
+  min-height: 52px;
+  text-align: right;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: var(--blue);
+  font-size: 26px;
+  font-weight: 900;
+}
+
+.score-extra {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 240px);
+  gap: 14px;
+  align-items: end;
+  margin-top: 16px;
+}
+
+.submit-bar {
+  position: fixed;
+  z-index: 20;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(180px, 320px);
+  gap: 12px;
+  align-items: center;
+  padding: 12px clamp(16px, 4vw, 40px);
+  background: rgba(255, 255, 255, .96);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -10px 30px rgba(15, 23, 42, .12);
+}
+
+.submit-bar span {
+  display: block;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.submit-bar strong {
+  display: block;
+  color: var(--blue);
+  font-size: 32px;
+  line-height: 1;
+}
+
+.submit-bar button {
   width: 100%;
-  margin-top: 18px;
+  min-height: 58px;
+  font-size: 20px;
 }
 
 .projector {
@@ -201,7 +326,7 @@ output {
 }
 
 .leaderboard h2 {
-  font-size: clamp(26px, 4vw, 44px);
+  font-size: 40px;
   color: #f4cf77;
 }
 
@@ -210,7 +335,7 @@ output {
   gap: 10px;
   margin: 18px 0 0;
   padding-left: 34px;
-  font-size: clamp(20px, 3vw, 34px);
+  font-size: 30px;
   font-weight: 800;
 }
 
@@ -260,12 +385,39 @@ code {
   .topbar,
   .projector-main,
   .form-grid,
-  .score-grid {
+  .score-grid,
+  .mode-picker,
+  .score-extra {
     grid-template-columns: 1fr;
   }
 
   .topbar {
     display: grid;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  main {
+    padding: 12px 12px 8px;
+  }
+
+  .tabs {
+    padding: 10px 12px;
+  }
+
+  .panel {
+    padding: 14px;
+  }
+
+  .stepper {
+    grid-template-columns: 1fr 60px 58px 60px;
+  }
+
+  .submit-bar {
+    grid-template-columns: 100px 1fr;
+    padding: 10px 12px;
   }
 
   .projector img {
