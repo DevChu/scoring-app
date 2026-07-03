@@ -17,7 +17,9 @@ let scoreRows = [];
 let currentScoreMode = "EXP";
 let canEditSpreadsheet = false;
 let refreshTimer = 0;
+let silentLoginAttempt = false;
 const teamCount = 6;
+const loginStateKey = "mipScoring.hasSignedIn";
 const guildOptions = ["", "守護公會", "偵察公會", "鍛造公會", "吟遊詩人公會", "魔法師公會"];
 
 const abilityDefs = [
@@ -41,6 +43,8 @@ document.addEventListener("DOMContentLoaded", () => {
   bindScoreControls();
   $("loginGateBtn").addEventListener("click", login);
   $("loginBtn").addEventListener("click", login);
+  $("logoutBtn").addEventListener("click", logout);
+  $("projectorLogoutBtn").addEventListener("click", logout);
   $("refreshBtn").addEventListener("click", loadAll);
   $("fullscreenBtn").addEventListener("click", toggleProjectorFullscreen);
   $("scoreForm").addEventListener("submit", submitScore);
@@ -60,20 +64,24 @@ document.addEventListener("DOMContentLoaded", () => {
       scope: scopes,
       callback: async (response) => {
         if (response.error) {
-          setStatus(`登入失敗：${response.error}`);
+          if (!silentLoginAttempt) setStatus(`登入失敗：${response.error}`);
+          silentLoginAttempt = false;
           return;
         }
+        silentLoginAttempt = false;
         accessToken = response.access_token;
         try {
           canEditSpreadsheet = await verifyAccess();
           applyAccessMode(canEditSpreadsheet);
           await loadAll();
+          localStorage.setItem(loginStateKey, "1");
           startAutoRefresh();
         } catch (error) {
           setStatus(`登入後檢查失敗：${error.message}`);
         }
       }
     });
+    attemptSilentLogin();
   };
 
   if (window.google?.accounts?.oauth2) init();
@@ -125,6 +133,39 @@ function login() {
     return;
   }
   tokenClient.requestAccessToken({ prompt: accessToken ? "" : "consent" });
+}
+
+function attemptSilentLogin() {
+  if (localStorage.getItem(loginStateKey) !== "1") return;
+  if (!tokenClient || accessToken) return;
+  silentLoginAttempt = true;
+  tokenClient.requestAccessToken({ prompt: "" });
+}
+
+function logout() {
+  localStorage.removeItem(loginStateKey);
+  canEditSpreadsheet = false;
+  profile = { name: "", email: "" };
+  teams = [];
+  missions = [];
+  leaderboard = [];
+  scoreRows = [];
+  if (refreshTimer) {
+    window.clearInterval(refreshTimer);
+    refreshTimer = 0;
+  }
+
+  const tokenToRevoke = accessToken;
+  accessToken = "";
+  $("submitBtn").disabled = true;
+  $("saveTeamsBtn").disabled = true;
+  setStatus("尚未登入");
+  document.body.classList.remove("editor-mode", "viewer-mode");
+  document.body.classList.add("signed-out");
+
+  if (tokenToRevoke && window.google?.accounts?.oauth2) {
+    google.accounts.oauth2.revoke(tokenToRevoke, () => {});
+  }
 }
 
 async function verifyAccess() {
