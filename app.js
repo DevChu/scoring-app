@@ -15,7 +15,7 @@ let missions = [];
 let leaderboard = [];
 let scoreRows = [];
 let currentScoreMode = "EXP";
-const teamCount = 5;
+const teamCount = 6;
 const guildOptions = ["", "守護公會", "偵察公會", "鍛造公會", "吟遊詩人公會", "魔法師公會"];
 
 const abilityDefs = [
