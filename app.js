@@ -15,6 +15,8 @@ let missions = [];
 let leaderboard = [];
 let scoreRows = [];
 let currentScoreMode = "EXP";
+let canEditSpreadsheet = false;
+let refreshTimer = 0;
 const teamCount = 6;
 const guildOptions = ["", "守護公會", "偵察公會", "鍛造公會", "吟遊詩人公會", "魔法師公會"];
 
@@ -37,6 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $("appTitle").textContent = config.appTitle || "2026 MIP挑戰營計分系統";
   bindTabs();
   bindScoreControls();
+  $("loginGateBtn").addEventListener("click", login);
   $("loginBtn").addEventListener("click", login);
   $("refreshBtn").addEventListener("click", loadAll);
   $("fullscreenBtn").addEventListener("click", toggleProjectorFullscreen);
@@ -62,8 +65,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         accessToken = response.access_token;
         try {
-          await verifyAccess();
+          canEditSpreadsheet = await verifyAccess();
+          applyAccessMode(canEditSpreadsheet);
           await loadAll();
+          startAutoRefresh();
         } catch (error) {
           setStatus(`登入後檢查失敗：${error.message}`);
         }
@@ -78,9 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
 function bindTabs() {
   document.querySelectorAll(".tab").forEach((tab) => {
     tab.addEventListener("click", () => {
-      document.querySelectorAll(".tab, .view").forEach((el) => el.classList.remove("active"));
-      tab.classList.add("active");
-      $(tab.dataset.view).classList.add("active");
+      activateView(tab.dataset.view);
     });
   });
 }
@@ -126,16 +129,17 @@ function login() {
 
 async function verifyAccess() {
   const file = await api(`https://www.googleapis.com/drive/v3/files/${config.spreadsheetId}?fields=id,name,capabilities(canEdit)`);
+  profile = await api("https://www.googleapis.com/oauth2/v3/userinfo");
   if (!file.capabilities?.canEdit) {
     $("submitBtn").disabled = true;
     $("saveTeamsBtn").disabled = true;
-    setStatus(`已登入，但此帳號沒有編輯「${file.name || "指定試算表"}」的權限`);
-    return;
+    setStatus(`已登入：${profile.email}，檢視模式`);
+    return false;
   }
-  profile = await api("https://www.googleapis.com/oauth2/v3/userinfo");
   $("submitBtn").disabled = false;
   $("saveTeamsBtn").disabled = false;
   setStatus(`已登入：${profile.email}，可編輯試算表`);
+  return true;
 }
 
 async function loadAll() {
@@ -386,6 +390,7 @@ async function submitScore(event) {
 
 async function saveTeams(event) {
   event.preventDefault();
+  if (!canEditSpreadsheet) return;
   const cards = Array.from(document.querySelectorAll(".team-editor-card"));
   const values = cards.map((card, index) => {
     const team = teams[index];
@@ -410,7 +415,34 @@ async function saveTeams(event) {
   } catch (error) {
     setStatus(`儲存組別失敗：${error.message}`);
   } finally {
-    $("saveTeamsBtn").disabled = !accessToken;
+    $("saveTeamsBtn").disabled = !accessToken || !canEditSpreadsheet;
+  }
+}
+
+function applyAccessMode(canEdit) {
+  document.body.classList.remove("signed-out", "editor-mode", "viewer-mode");
+  document.body.classList.add(canEdit ? "editor-mode" : "viewer-mode");
+  if (canEdit) {
+    activateView("scoreView");
+  } else {
+    activateView("boardView");
+  }
+}
+
+function activateView(viewId) {
+  document.querySelectorAll(".tab, .view").forEach((el) => el.classList.remove("active"));
+  const tab = document.querySelector(`.tab[data-view="${viewId}"]`);
+  if (tab) tab.classList.add("active");
+  $(viewId).classList.add("active");
+}
+
+function startAutoRefresh() {
+  if (refreshTimer) window.clearInterval(refreshTimer);
+  const interval = Number(config.refreshIntervalMs || 30000);
+  if (interval > 0) {
+    refreshTimer = window.setInterval(() => {
+      if (accessToken) loadAll().catch((error) => setStatus(`更新失敗：${error.message}`));
+    }, interval);
   }
 }
 

@@ -27,6 +27,61 @@ body {
   padding-bottom: 94px;
 }
 
+.login-gate {
+  display: none;
+}
+
+.login-gate button {
+  min-width: 220px;
+  min-height: 64px;
+  font-size: 22px;
+}
+
+body.signed-out {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding-bottom: 0;
+  background: #182131;
+}
+
+.signed-out .login-gate {
+  display: grid;
+}
+
+.signed-out .topbar,
+.signed-out .tabs,
+.signed-out main {
+  display: none;
+}
+
+.viewer-mode {
+  padding-bottom: 0;
+  background: #101827;
+}
+
+.viewer-mode .topbar,
+.viewer-mode .tabs,
+.viewer-mode #scoreView,
+.viewer-mode #teamsView,
+.viewer-mode #setupView,
+.viewer-mode .submit-bar {
+  display: none !important;
+}
+
+.viewer-mode main {
+  padding: 0;
+}
+
+.viewer-mode #boardView {
+  display: block;
+}
+
+.viewer-mode .projector {
+  min-height: 100vh;
+  border-radius: 0;
+}
+
 button,
 input,
 select,
